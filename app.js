@@ -1,5 +1,5 @@
 // Replace with your PlayFab Title ID
-PlayFab.settings.TitleId = "YOUR_PLAYFAB_TITLE_ID";
+PlayFab.settings.TitleId = "7DDAD";
 
 let googleAccessToken = null; // Stored after Google Drive link
 
