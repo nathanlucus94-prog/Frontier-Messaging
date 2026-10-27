@@ -1,39 +1,51 @@
-// Replace with your PlayFab Title ID
+// Setup PlayFab Title ID
 PlayFab.settings.TitleId = "7DDAD";
-
 let googleAccessToken = null;
 let tokenClient;
 
 // Initialize Google OAuth Token Client for Google Drive access
 window.onload = function () {
-    tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: '186186648504-bt961f8nij12tq8bkjuodvj5hk1b6m4o.apps.googleusercontent.com',
-        scope: 'https://www.googleapis.com/auth/drive.appdata',
-        callback: (response) => {
-            if (response.access_token) {
-                googleAccessToken = response.access_token;
-                console.log("Google Drive Access Token Granted!");
-            }
-        },
-    });
+    if (typeof google !== 'undefined' && google.accounts) {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: '186186648504-bt961f8nij12tq8bkjuodvj5hk1b6m4o.apps.googleusercontent.com',
+            scope: 'https://www.googleapis.com/auth/drive.appdata',
+            callback: (response) => {
+                if (response.access_token) {
+                    googleAccessToken = response.access_token;
+                    console.log("Google Drive Access Token Granted!");
+                }
+            },
+        });
+    }
 };
 
 // Handles standard Google Login Response (YouTube/Gmail style sign-in popup)
 function handleGoogleResponse(response) {
     const idToken = response.credential; // Google JWT Token
+    if (!idToken) {
+        console.error("Google login failed: No credential returned.");
+        return;
+    }
+
     console.log("Google Sign-In Successful!");
 
-    // 1. Authenticate / Link with PlayFab using Google credential
+    // 1. Authenticate with PlayFab (non-blocking for UI)
     authenticateWithPlayFab(idToken);
 
     // 2. Request Google Drive permissions in the background for data storage
     if (tokenClient) {
-        tokenClient.requestAccessToken({ prompt: '' });
+        try {
+            tokenClient.requestAccessToken({ prompt: '' });
+        } catch (e) {
+            console.warn("Drive token popup skipped or blocked:", e);
+        }
     }
 
-    // 3. Switch UI to App Screen
+    // 3. FIX: Immediately transition UI to App Screen so user isn't stuck
     document.getElementById("login-screen").classList.add("hidden");
     document.getElementById("app-screen").classList.remove("hidden");
+    
+    // Optional: Extract basic user info from JWT if needed, otherwise fallback
     document.getElementById("username-display").innerText = "Google User";
 }
 
@@ -47,7 +59,8 @@ function authenticateWithPlayFab(googleIdToken) {
         console.log("PlayFab Login Success. PlayFab ID:", result.data.PlayFabId);
     }, 
     function (error) {
-        console.warn("PlayFab login notice:", error.errorMessage || "Running in static mode fallback.");
+        // Non-fatal warning so the app continues working via GitHub Pages static execution
+        console.warn("PlayFab login notice: Running in frontend-only fallback mode.", error.errorMessage || "");
     });
 }
 
