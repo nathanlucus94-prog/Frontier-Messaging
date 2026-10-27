@@ -7,7 +7,7 @@ let tokenClient;
 // Initialize Google OAuth Token Client for Google Drive access
 window.onload = function () {
     tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
+        client_id: '186186648504-bt961f8nij12tq8bkjuodvj5hk1b6m4o.apps.googleusercontent.com',
         scope: 'https://www.googleapis.com/auth/drive.appdata',
         callback: (response) => {
             if (response.access_token) {
