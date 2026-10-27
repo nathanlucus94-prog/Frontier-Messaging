@@ -1,10 +1,14 @@
-// Setup PlayFab Title ID
-PlayFab.settings.TitleId = "7DDAD";
+// Setup PlayFab Title ID safely
+if (typeof PlayFab !== 'undefined') {
+    PlayFab.settings.TitleId = "7DDAD";
+}
+
 let googleAccessToken = null;
 let tokenClient;
 
 // Initialize Google OAuth Token Client for Google Drive access
 window.onload = function () {
+    console.log("Window loaded. Initializing Google client...");
     if (typeof google !== 'undefined' && google.accounts) {
         tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: '186186648504-bt961f8nij12tq8bkjuodvj5hk1b6m4o.apps.googleusercontent.com',
@@ -16,23 +20,38 @@ window.onload = function () {
                 }
             },
         });
+    } else {
+        console.warn("Google SDK not loaded yet.");
     }
 };
 
-// Handles standard Google Login Response (YouTube/Gmail style sign-in popup)
+// Handles standard Google Login Response
 function handleGoogleResponse(response) {
-    const idToken = response.credential; // Google JWT Token
-    if (!idToken) {
-        console.error("Google login failed: No credential returned.");
-        return;
+    console.log("Google Sign-In Triggered! Response received:", response);
+
+    // 1. FORCE UI SWITCH FIRST so you never get stuck on the login screen
+    const loginScreen = document.getElementById("login-screen");
+    const appScreen = document.getElementById("app-screen");
+    
+    if (loginScreen && appScreen) {
+        loginScreen.classList.add("hidden");
+        appScreen.classList.remove("hidden");
+        console.log("UI Switched to App Screen.");
+    } else {
+        console.error("Could not find login-screen or app-screen elements in HTML!");
     }
 
-    console.log("Google Sign-In Successful!");
+    const userDisplay = document.getElementById("username-display");
+    if (userDisplay) {
+        userDisplay.innerText = "Google User";
+    }
 
-    // 1. Authenticate with PlayFab (non-blocking for UI)
-    authenticateWithPlayFab(idToken);
+    // 2. Handle token and background services safely afterwards inside a try-catch block
+    const idToken = response.credential; 
+    if (idToken) {
+        authenticateWithPlayFab(idToken);
+    }
 
-    // 2. Request Google Drive permissions in the background for data storage
     if (tokenClient) {
         try {
             tokenClient.requestAccessToken({ prompt: '' });
@@ -40,28 +59,29 @@ function handleGoogleResponse(response) {
             console.warn("Drive token popup skipped or blocked:", e);
         }
     }
-
-    // 3. FIX: Immediately transition UI to App Screen so user isn't stuck
-    document.getElementById("login-screen").classList.add("hidden");
-    document.getElementById("app-screen").classList.remove("hidden");
-    
-    // Optional: Extract basic user info from JWT if needed, otherwise fallback
-    document.getElementById("username-display").innerText = "Google User";
 }
 
-// Send Google Token to Microsoft PlayFab
+// Send Google Token to Microsoft PlayFab with strict error trapping
 function authenticateWithPlayFab(googleIdToken) {
-    PlayFabClientApi.LoginWithGoogleAccount({
-        ServerAuthCode: googleIdToken,
-        CreateAccount: true
-    }, 
-    function (result) {
-        console.log("PlayFab Login Success. PlayFab ID:", result.data.PlayFabId);
-    }, 
-    function (error) {
-        // Non-fatal warning so the app continues working via GitHub Pages static execution
-        console.warn("PlayFab login notice: Running in frontend-only fallback mode.", error.errorMessage || "");
-    });
+    try {
+        if (typeof PlayFabClientApi === 'undefined' || !PlayFabClientApi.LoginWithGoogleAccount) {
+            console.warn("PlayFabClientApi is not loaded. Running in standalone static mode.");
+            return;
+        }
+
+        PlayFabClientApi.LoginWithGoogleAccount({
+            ServerAuthCode: googleIdToken,
+            CreateAccount: true
+        }, 
+        function (result) {
+            console.log("PlayFab Login Success. PlayFab ID:", result.data.PlayFabId);
+        }, 
+        function (error) {
+            console.warn("PlayFab login notice:", error.errorMessage || "API error.");
+        });
+    } catch (err) {
+        console.warn("PlayFab wrapper caught an exception:", err);
+    }
 }
 
 function promptCreateServer() {
@@ -72,12 +92,14 @@ function promptCreateServer() {
 }
 
 function openSettingsTab() {
-    document.getElementById("settings-modal").classList.remove("hidden");
+    const modal = document.getElementById("settings-modal");
+    if (modal) modal.classList.remove("hidden");
     checkGoogleDriveStorage();
 }
 
 function closeSettingsTab() {
-    document.getElementById("settings-modal").classList.add("hidden");
+    const modal = document.getElementById("settings-modal");
+    if (modal) modal.classList.add("hidden");
 }
 
 function handleKeyPress(event) {
@@ -88,10 +110,14 @@ function handleKeyPress(event) {
 
 function sendChatMessage() {
     const input = document.getElementById("message-input");
+    if (!input) return;
+    
     const text = input.value.trim();
     if (!text) return;
     
     const container = document.getElementById("messages-container");
+    if (!container) return;
+
     const msgDiv = document.createElement("div");
     msgDiv.className = "message-item";
     msgDiv.innerHTML = `<strong>Google User:</strong> ${escapeHtml(text)}`;
@@ -109,6 +135,8 @@ function escapeHtml(str) {
 async function checkGoogleDriveStorage() {
     const storageStatusEl = document.getElementById("storage-status");
     const warningEl = document.getElementById("storage-warning");
+
+    if (!storageStatusEl) return;
 
     if (!googleAccessToken) {
         storageStatusEl.innerText = "Google Drive access token not active yet.";
@@ -134,9 +162,9 @@ async function checkGoogleDriveStorage() {
 
         const TWO_GB_IN_BYTES = 2147483648;
         if (totalAppBytes >= TWO_GB_IN_BYTES) {
-            warningEl.classList.remove("hidden");
+            if (warningEl) warningEl.classList.remove("hidden");
         } else {
-            warningEl.classList.add("hidden");
+            if (warningEl) warningEl.classList.add("hidden");
         }
     } catch (error) {
         storageStatusEl.innerText = "Unable to retrieve storage quota metrics.";
