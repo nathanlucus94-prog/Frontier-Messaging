@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord-Like App (PlayFab + Google Drive)</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Include PlayFab SDK -->
+    <script src="https://download.playfab.com/PlayFabClientApi.js"></script>
+</head>
+<body>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen">
+        <div class="login-card">
+            <h2>Welcome</h2>
+            <p>Log in with your account to get started.</p>
+            <button id="login-btn" onclick="loginWithPlayFab()">Sign In</button>
+        </div>
+    </div>
+
+    <!-- Main App Screen -->
+    <div id="app-screen" class="screen hidden">
+        <!-- Servers Sidebar -->
+        <nav id="servers-sidebar">
+            <div class="server-icon active" title="Home">🏠</div>
+            <div class="server-icon" title="Create Server" onclick="promptCreateServer()">➕</div>
+        </nav>
+
+        <!-- Channels Sidebar -->
+        <div id="channels-sidebar">
+            <div class="server-header">
+                <h3 id="server-title">My Server</h3>
+            </div>
+            <ul id="channel-list">
+                <li class="channel active"># general</li>
+            </ul>
+            <div class="user-panel">
+                <span id="username-display">User</span>
+                <button onclick="openSettingsTab()">⚙️ Settings</button>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <main id="chat-area">
+            <div id="chat-header">
+                <h3># general</h3>
+            </div>
+            <div id="messages-container">
+                <!-- Messages load here -->
+            </div>
+            <div id="chat-input-area">
+                <input type="text" id="message-input" placeholder="Message #general...">
+                <button onclick="sendChatMessage()">Send</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Private Account Settings Modal / Tab -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Account & Storage Settings</h2>
+            <p id="storage-status">Google Drive Storage Used: Calculating...</p>
+            <div id="storage-warning" class="hidden warning-box">
+                ⚠️ Warning: Your app data on Google Drive has exceeded 2 GB! Consider backing up or clearing old data.
+            </div>
+            <button onclick="closeSettingsTab()">Close</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
