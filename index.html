@@ -18,7 +18,7 @@
             
             <!-- Google Sign-In Button Container -->
             <div id="g_id_onload"
-                 data-client_id="186186648504-bt961f8nij12tq8bkjuodvj5hk1b6m4o.apps.googleusercontent.com"
+                 data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
                  data-callback="handleGoogleResponse"
                  data-auto_select="false">
             </div>
@@ -70,12 +70,15 @@
             <p style="margin-top: 10px;">Connected via Google Account.</p>
             <hr style="margin: 15px 0; border: 0; border-top: 1px solid #3f4147;">
             
-            <p id="storage-status">Google Drive App Storage: Checking...</p>
+            <p id="storage-status">Google Drive App Storage: Not connected.</p>
             <div id="storage-warning" class="hidden warning-box">
                 ⚠️ Warning: Your Google Drive app data has reached or exceeded 2 GB! Consider clearing old chat logs.
             </div>
             
-            <button class="close-btn" onclick="closeSettingsTab()">Close Settings</button>
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button class="close-btn" style="background-color: #2b2d31; border: 1px solid #5865f2; margin-top: 0;" onclick="triggerDriveAuth()">Connect Google Drive</button>
+                <button class="close-btn" style="margin-top: 0;" onclick="closeSettingsTab()">Close</button>
+            </div>
         </div>
     </div>
 
