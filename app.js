@@ -12,6 +12,8 @@ window.onload = function () {
                 if (response.access_token) {
                     googleAccessToken = response.access_token;
                     console.log("Google Drive Access Token Granted!");
+                    alert("Google Drive connected successfully!");
+                    checkGoogleDriveStorage();
                 }
             },
         });
@@ -24,7 +26,7 @@ window.onload = function () {
 function handleGoogleResponse(response) {
     console.log("Google Sign-In Triggered! Response received:", response);
 
-    // 1. Switch UI to App Screen immediately
+    // Switch UI to App Screen immediately
     const loginScreen = document.getElementById("login-screen");
     const appScreen = document.getElementById("app-screen");
     
@@ -38,14 +40,14 @@ function handleGoogleResponse(response) {
     if (userDisplay) {
         userDisplay.innerText = "Google User";
     }
+}
 
-    // 2. Request Google Drive permissions in the background for data storage
+// Manually triggered when user clicks "Connect Google Drive" in settings
+function triggerDriveAuth() {
     if (tokenClient) {
-        try {
-            tokenClient.requestAccessToken({ prompt: '' });
-        } catch (e) {
-            console.warn("Drive token popup skipped or blocked:", e);
-        }
+        tokenClient.requestAccessToken({ prompt: 'consent' });
+    } else {
+        alert("Google Client is still initializing. Please wait a second and try again.");
     }
 }
 
@@ -104,11 +106,12 @@ async function checkGoogleDriveStorage() {
     if (!storageStatusEl) return;
 
     if (!googleAccessToken) {
-        storageStatusEl.innerText = "Google Drive access token not active yet.";
+        storageStatusEl.innerText = "Google Drive App Storage: Not connected. Click 'Connect Google Drive'.";
         return;
     }
 
     try {
+        storageStatusEl.innerText = "Checking Google Drive storage usage...";
         const response = await fetch("https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(size)", {
             headers: { 'Authorization': 'Bearer ' + googleAccessToken }
         });
