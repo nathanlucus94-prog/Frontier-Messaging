@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord-Like App (PlayFab + Google Drive)</title>
+    <title>Discord-Like App (Google Login + PlayFab + Drive)</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Include PlayFab SDK -->
+    <!-- PlayFab SDK -->
     <script src="https://download.playfab.com/PlayFabClientApi.js"></script>
+    <!-- Google Identity Services SDK -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -14,8 +16,15 @@
     <div id="login-screen" class="screen">
         <div class="login-card">
             <h2>Welcome</h2>
-            <p>Log in with your account to get started.</p>
-            <button id="login-btn" onclick="loginWithPlayFab()">Sign In</button>
+            <p>Sign in with your Google account to continue.</p>
+            
+            <!-- Google Sign-In Button Container -->
+            <div id="g_id_onload"
+                 data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+                 data-callback="handleGoogleResponse"
+                 data-auto_select="false">
+            </div>
+            <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline"></div>
         </div>
     </div>
 
@@ -36,8 +45,8 @@
                 <li class="channel active"># general</li>
             </ul>
             <div class="user-panel">
-                <span id="username-display">User</span>
-                <button onclick="openSettingsTab()">⚙️ Settings</button>
+                <span id="username-display">Google User</span>
+                <button onclick="openSettingsTab()" title="Settings">⚙️</button>
             </div>
         </div>
 
@@ -47,24 +56,28 @@
                 <h3># general</h3>
             </div>
             <div id="messages-container">
-                <!-- Messages load here -->
+                <!-- Chat messages appear here -->
             </div>
             <div id="chat-input-area">
-                <input type="text" id="message-input" placeholder="Message #general...">
+                <input type="text" id="message-input" placeholder="Message #general..." onkeypress="handleKeyPress(event)">
                 <button onclick="sendChatMessage()">Send</button>
             </div>
         </main>
     </div>
 
-    <!-- Private Account Settings Modal / Tab -->
+    <!-- Private Account Management & Settings Modal -->
     <div id="settings-modal" class="modal hidden">
         <div class="modal-content">
             <h2>Account & Storage Settings</h2>
-            <p id="storage-status">Google Drive Storage Used: Calculating...</p>
+            <p style="margin-top: 10px;">Connected via Google Account.</p>
+            <hr style="margin: 15px 0; border: 0; border-top: 1px solid #3f4147;">
+            
+            <p id="storage-status">Google Drive App Storage: Checking...</p>
             <div id="storage-warning" class="hidden warning-box">
-                ⚠️ Warning: Your app data on Google Drive has exceeded 2 GB! Consider backing up or clearing old data.
+                ⚠️ Warning: Your Google Drive app data has reached or exceeded 2 GB! Consider clearing old chat logs.
             </div>
-            <button onclick="closeSettingsTab()">Close</button>
+            
+            <button class="close-btn" onclick="closeSettingsTab()">Close Settings</button>
         </div>
     </div>
 
