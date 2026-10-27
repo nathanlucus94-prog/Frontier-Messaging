@@ -1,8 +1,3 @@
-// Setup PlayFab Title ID safely
-if (typeof PlayFab !== 'undefined') {
-    PlayFab.settings.TitleId = "7DDAD";
-}
-
 let googleAccessToken = null;
 let tokenClient;
 
@@ -11,7 +6,7 @@ window.onload = function () {
     console.log("Window loaded. Initializing Google client...");
     if (typeof google !== 'undefined' && google.accounts) {
         tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: '186186648504-bt961f8nij12tq8bkjuodvj5hk1b6m4o.apps.googleusercontent.com',
+            client_id: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
             scope: 'https://www.googleapis.com/auth/drive.appdata',
             callback: (response) => {
                 if (response.access_token) {
@@ -29,7 +24,7 @@ window.onload = function () {
 function handleGoogleResponse(response) {
     console.log("Google Sign-In Triggered! Response received:", response);
 
-    // 1. FORCE UI SWITCH FIRST so you never get stuck on the login screen
+    // 1. Switch UI to App Screen immediately
     const loginScreen = document.getElementById("login-screen");
     const appScreen = document.getElementById("app-screen");
     
@@ -37,8 +32,6 @@ function handleGoogleResponse(response) {
         loginScreen.classList.add("hidden");
         appScreen.classList.remove("hidden");
         console.log("UI Switched to App Screen.");
-    } else {
-        console.error("Could not find login-screen or app-screen elements in HTML!");
     }
 
     const userDisplay = document.getElementById("username-display");
@@ -46,41 +39,13 @@ function handleGoogleResponse(response) {
         userDisplay.innerText = "Google User";
     }
 
-    // 2. Handle token and background services safely afterwards inside a try-catch block
-    const idToken = response.credential; 
-    if (idToken) {
-        authenticateWithPlayFab(idToken);
-    }
-
+    // 2. Request Google Drive permissions in the background for data storage
     if (tokenClient) {
         try {
             tokenClient.requestAccessToken({ prompt: '' });
         } catch (e) {
             console.warn("Drive token popup skipped or blocked:", e);
         }
-    }
-}
-
-// Send Google Token to Microsoft PlayFab with strict error trapping
-function authenticateWithPlayFab(googleIdToken) {
-    try {
-        if (typeof PlayFabClientApi === 'undefined' || !PlayFabClientApi.LoginWithGoogleAccount) {
-            console.warn("PlayFabClientApi is not loaded. Running in standalone static mode.");
-            return;
-        }
-
-        PlayFabClientApi.LoginWithGoogleAccount({
-            ServerAuthCode: googleIdToken,
-            CreateAccount: true
-        }, 
-        function (result) {
-            console.log("PlayFab Login Success. PlayFab ID:", result.data.PlayFabId);
-        }, 
-        function (error) {
-            console.warn("PlayFab login notice:", error.errorMessage || "API error.");
-        });
-    } catch (err) {
-        console.warn("PlayFab wrapper caught an exception:", err);
     }
 }
 
